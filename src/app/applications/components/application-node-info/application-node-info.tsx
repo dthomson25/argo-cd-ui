@@ -2,7 +2,9 @@ import { Tab, Tabs } from 'argo-ui';
 import * as jsYaml from 'js-yaml';
 import * as React from 'react';
 
+import { DataLoader } from '../../../shared/components';
 import * as models from '../../../shared/models';
+import { services } from '../../../shared/services';
 import { ApplicationResourceDiff } from '../application-resource-diff/application-resource-diff';
 import { ComparisonStatusIcon, getPodStateReason, getStateAndNode, HealthStatusIcon } from '../utils';
 
@@ -52,10 +54,9 @@ export const ApplicationNodeInfo = (props: { node: models.ResourceNode | models.
         tabs.unshift({
             key: 'diff',
             title: 'Diff',
-            content: <ApplicationResourceDiff targetState={resourceState.targetState} liveState={resourceState.liveState}/>,
+            content: addApplicationResourceDiff(resourceState),
         });
     }
-
     return (
         <div>
             <div className='white-box'>
@@ -77,3 +78,14 @@ export const ApplicationNodeInfo = (props: { node: models.ResourceNode | models.
         </div>
     );
 };
+
+function addApplicationResourceDiff(resourceState: models.ResourceState): any {
+    return (
+        <DataLoader
+        load={() => services.applications.diffManifests([resourceState.targetState], [resourceState.liveState])}>
+            {(diff: models.ManifestDiffResponse) =>
+                <ApplicationResourceDiff targetState={resourceState.targetState} liveState={resourceState.liveState} diff={diff}/>
+            }
+        </DataLoader>
+    );
+}

@@ -7,21 +7,26 @@ require('./application-resource-diff.scss');
 export interface ApplicationComponentDiffProps {
     liveState: models.TypeMeta & { metadata: models.ObjectMeta };
     targetState: models.TypeMeta & { metadata: models.ObjectMeta };
+    diff: any;
 }
 
-export class ApplicationResourceDiff extends React.Component<ApplicationComponentDiffProps, { hideDefaultedFields: boolean }> {
+export class    ApplicationResourceDiff extends React.Component<ApplicationComponentDiffProps, { hideDefaultedFields: boolean }> {
     constructor(props: ApplicationComponentDiffProps) {
         super(props);
         this.state = { hideDefaultedFields: true };
     }
 
     public render() {
-        let liveState = this.props.liveState || {};
-        if (this.state.hideDefaultedFields) {
-            liveState = this.removeDefaultedFields(this.props.targetState || {}, liveState);
+        let diff = JSON.parse(this.props.diff.diffs);
+        const liveState = this.props.liveState;
+        if (!this.state.hideDefaultedFields ) {
+            if (liveState !== null && liveState.hasOwnProperty('metadata') && liveState.metadata.hasOwnProperty('annotations')) {
+                const lastApplied = JSON.parse(liveState.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] || '');
+                const defaultFieldsDiff = jsonDiffPatch.diff(lastApplied, liveState);
+                diff = this.addDefaultedFields(diff, defaultFieldsDiff);
+            }
         }
-        const delta = jsonDiffPatch.diff(this.props.targetState || {}, liveState) || {};
-        const html = jsonDiffPatch.formatters.html.format(delta, this.props.targetState);
+        const html = jsonDiffPatch.formatters.html.format(diff, this.props.targetState);
         return (
             <div className='application-component-diff'>
                 <div className='application-component-diff__checkbox'>
@@ -35,29 +40,20 @@ export class ApplicationResourceDiff extends React.Component<ApplicationComponen
         );
     }
 
-    private removeDefaultedFields(config: any, live: any): any {
-        if (config instanceof Array) {
-            const result = [];
-            for (let i = 0; i < live.length; i++) {
-                const v2 = live[i];
-                if (config.length > i) {
-                    result.push(this.removeDefaultedFields(config[i], v2));
+    private addDefaultedFields(realDiff: any, defaultFieldsDiff: any): any {
+        if (realDiff instanceof Object) {
+            const result = realDiff;
+            for (const k of Object.keys(defaultFieldsDiff)) {
+                if (realDiff.hasOwnProperty(k)) {
+                    const v1 = realDiff[k];
+                    const v2 = defaultFieldsDiff[k];
+                    result[k] = this.addDefaultedFields(v1, v2);
                 } else {
-                    result.push(v2);
-                }
-            }
-            return result;
-        } else if (config instanceof Object) {
-            const result: any = {};
-            for (const k of Object.keys(config)) {
-                const v1 = config[k];
-                if (live.hasOwnProperty(k)) {
-                    const v2 = live[k];
-                    result[k] = this.removeDefaultedFields(v1, v2);
+                    result[k] = defaultFieldsDiff[k];
                 }
             }
             return result;
         }
-        return live;
+        return realDiff;
     }
 }

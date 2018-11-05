@@ -398,6 +398,10 @@ export type ProjectList = ItemsList<Project>;
 
 export const DEFAULT_PROJECT_NAME = 'default';
 
+export interface ManifestDiffResponse {
+    diffs: any[];
+}
+
 export interface ManifestResponse {
     manifests: string[];
     namespace: string;
