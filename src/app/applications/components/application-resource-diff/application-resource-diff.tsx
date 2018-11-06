@@ -1,16 +1,16 @@
 import { Checkbox, models } from 'argo-ui';
+import { Delta, DiffPatcher, formatters } from 'jsondiffpatch';
 import * as React from 'react';
 
-const jsonDiffPatch = require('jsondiffpatch');
 require('./application-resource-diff.scss');
 
 export interface ApplicationComponentDiffProps {
     liveState: models.TypeMeta & { metadata: models.ObjectMeta };
     targetState: models.TypeMeta & { metadata: models.ObjectMeta };
-    diff: any;
+    diff: Delta;
 }
 
-export class    ApplicationResourceDiff extends React.Component<ApplicationComponentDiffProps, { hideDefaultedFields: boolean }> {
+export class ApplicationResourceDiff extends React.Component<ApplicationComponentDiffProps, { hideDefaultedFields: boolean }> {
     constructor(props: ApplicationComponentDiffProps) {
         super(props);
         this.state = { hideDefaultedFields: true };
@@ -19,14 +19,15 @@ export class    ApplicationResourceDiff extends React.Component<ApplicationCompo
     public render() {
         let diff = JSON.parse(this.props.diff.diffs);
         const liveState = this.props.liveState;
+        const diffPatcher = new DiffPatcher();
         if (!this.state.hideDefaultedFields ) {
             if (liveState !== null && liveState.hasOwnProperty('metadata') && liveState.metadata.hasOwnProperty('annotations')) {
                 const lastApplied = JSON.parse(liveState.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] || '');
-                const defaultFieldsDiff = jsonDiffPatch.diff(lastApplied, liveState);
+                const defaultFieldsDiff = diffPatcher.diff(lastApplied, liveState);
                 diff = this.addDefaultedFields(diff, defaultFieldsDiff);
             }
         }
-        const html = jsonDiffPatch.formatters.html.format(diff, this.props.targetState);
+        const html = formatters.html.format(diff, this.props.targetState);
         return (
             <div className='application-component-diff'>
                 <div className='application-component-diff__checkbox'>

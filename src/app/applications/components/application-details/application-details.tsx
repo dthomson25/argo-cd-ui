@@ -183,7 +183,11 @@ export class ApplicationDetails extends React.Component<RouteComponentProps<{ na
                                 {selectedNode && <Tabs
                                     navTransparent={true}
                                     tabs={this.getResourceTabs(
-                                        application, selectedNode, [{title: 'SUMMARY', key: 'summary', content: <ApplicationNodeInfo node={selectedNode}/>}])} />
+                                        application, selectedNode, [{
+                                            title: 'SUMMARY',
+                                            key: 'summary',
+                                            content: <ApplicationNodeInfo appName={application.metadata.name} node={selectedNode}/>,
+                                        }])} />
                                 }
                                 {isAppSelected && (
                                     <Tabs navTransparent={true} tabs={[{

@@ -10,7 +10,7 @@ import { ComparisonStatusIcon, getPodStateReason, getStateAndNode, HealthStatusI
 
 require('./application-node-info.scss');
 
-export const ApplicationNodeInfo = (props: { node: models.ResourceNode | models.ResourceState}) => {
+export const ApplicationNodeInfo = (props: { appName: string, node: models.ResourceNode | models.ResourceState}) => {
     const {resourceNode, resourceState} = getStateAndNode(props.node);
 
     const attributes = [
@@ -54,7 +54,7 @@ export const ApplicationNodeInfo = (props: { node: models.ResourceNode | models.
         tabs.unshift({
             key: 'diff',
             title: 'Diff',
-            content: addApplicationResourceDiff(resourceState),
+            content: addApplicationResourceDiff(props.appName, resourceNode, resourceState),
         });
     }
     return (
@@ -79,10 +79,10 @@ export const ApplicationNodeInfo = (props: { node: models.ResourceNode | models.
     );
 };
 
-function addApplicationResourceDiff(resourceState: models.ResourceState): any {
+function addApplicationResourceDiff(appName: string, node: models.ResourceNode, resourceState: models.ResourceState): any {
     return (
         <DataLoader
-        load={() => services.applications.diffManifests([resourceState.targetState], [resourceState.liveState])}>
+        load={() => services.applications.diffManifests(appName, node.state.metadata.name, node.state.apiVersion, node.state.kind)}>
             {(diff: models.ManifestDiffResponse) =>
                 <ApplicationResourceDiff targetState={resourceState.targetState} liveState={resourceState.liveState} diff={diff}/>
             }

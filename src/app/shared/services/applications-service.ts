@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 
 import * as models from '../models';
-// import * as k8s from 'argo-ui';
 
 import requests from './requests';
 
@@ -32,11 +31,8 @@ export class ApplicationsService {
         return requests.get(`/applications/${name}/manifests`).query({name, revision}).then((res) => res.body as models.ManifestResponse);
     }
 
-    public diffManifests(config: any,
-                         live: any): Promise<models.ManifestDiffResponse> {
-                            const configStr = JSON.stringify(config);
-                            const liveStr = JSON.stringify(live);
-                            return requests.post(`/applications/manifest`).send({config: configStr, live: liveStr}).then((res) => res.body as models.ManifestDiffResponse);
+    public diffManifests(appName: string, resourceName?: string, APIVersion?: string, kind?: string): Promise<models.ManifestDiffResponse> {
+        return requests.post(`/applications/${appName}/diff`).send({resourceName, APIVersion, kind}).then((res) => res.body as models.ManifestDiffResponse);
     }
 
     public updateSpec(appName: string, spec: models.ApplicationSpec): Promise<models.ApplicationSpec> {

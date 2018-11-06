@@ -1,4 +1,5 @@
 import { models } from 'argo-ui';
+import { Delta } from 'jsondiffpatch';
 
 interface ItemsList<T> {
     /**
@@ -399,7 +400,7 @@ export type ProjectList = ItemsList<Project>;
 export const DEFAULT_PROJECT_NAME = 'default';
 
 export interface ManifestDiffResponse {
-    diffs: any[];
+    diffs: Delta[];
 }
 
 export interface ManifestResponse {
