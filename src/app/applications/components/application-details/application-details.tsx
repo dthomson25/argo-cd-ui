@@ -196,10 +196,16 @@ export class ApplicationDetails extends React.Component<RouteComponentProps<{ na
 
                                     }}>{(data) =>
                                         <Tabs navTransparent={true} tabs={this.getResourceTabs(application, selectedNode, data.liveState, [
-                                                {title: 'SUMMARY', key: 'summary', content: (
-                                                    <ApplicationNodeInfo live={data.liveState} controlled={data.controlledState} node={selectedNode}/>
+                                            {title: 'SUMMARY', key: 'summary',
+                                                content: (
+                                                    <ApplicationNodeInfo
+                                                        live={data.liveState}
+                                                        controlled={data.controlledState}
+                                                        node={selectedNode}
+                                                    />
                                                 ),
-                                            }])} />
+                                            },
+                                        ])} />
                                     }</DataLoader>
                                 )}
                                 {isAppSelected && (
@@ -494,7 +500,7 @@ export class ApplicationDetails extends React.Component<RouteComponentProps<{ na
             return this.getApplicationActionMenu(application);
         }
 
-        return [{
+        const menuItems = [{
             title: 'Details',
             action: () => this.selectNode(nodeKey(resource)),
         }, {
@@ -527,6 +533,26 @@ export class ApplicationDetails extends React.Component<RouteComponentProps<{ na
                 });
             },
         }];
+        if (resource.kind === 'Rollout') {
+            menuItems.push({
+                title: 'Continue Rollout',
+                action: async () => {
+                    const rolloutPatch = '{ "status": { "verifyingPreview": false } }';
+                    const confirmed = await this.appContext.apis.popup.confirm('Progress Rollout', `Are you sure you want to rollout the new replicaset to the active service?`);
+                    if (confirmed) {
+                        try {
+                            services.applications.patchResource(this.props.match.params.name, resource, appModels.PatchTypes.MergePatchType, rolloutPatch);
+                        } catch (e) {
+                            this.appContext.apis.notifications.show({
+                                content: <ErrorNotification title='Unable to patch rollout' e={e}/>,
+                                type: NotificationType.Error,
+                            });
+                        }
+                    }
+                },
+            });
+        }
+        return menuItems;
     }
 
     private async deleteApplication() {

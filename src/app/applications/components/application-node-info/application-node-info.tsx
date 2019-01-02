@@ -2,13 +2,24 @@ import { Tab, Tabs } from 'argo-ui';
 import * as jsYaml from 'js-yaml';
 import * as React from 'react';
 
+import { AppContext } from '../../../shared/context';
 import * as models from '../../../shared/models';
 import { ApplicationResourceDiff } from '../application-resource-diff/application-resource-diff';
+import { RolloutNodeInfo } from '../rollout-node-info/rollout-node-info';
 import { ComparisonStatusIcon, getPodStateReason, HealthStatusIcon, ResourceTreeNode } from '../utils';
 
 require('./application-node-info.scss');
 
-export const ApplicationNodeInfo = (props: { node: ResourceTreeNode, live: models.State, controlled: { summary: models.ResourceStatus, state: models.ResourceDiff } }) => {
+interface ApplicationNodeInfoProps {
+    node: ResourceTreeNode;
+    live: models.State;
+    controlled: {
+        summary: models.ResourceStatus;
+        state: models.ResourceDiff;
+    };
+}
+
+export const ApplicationNodeInfo = (props: ApplicationNodeInfoProps) => {
     const attributes = [
         {title: 'KIND', value: props.node.kind},
         {title: 'NAME', value: props.node.name},
@@ -73,6 +84,9 @@ export const ApplicationNodeInfo = (props: { node: ResourceTreeNode, live: model
                     ))}
                 </div>
             </div>
+            {props.node.kind === 'Rollout' && (
+                <RolloutNodeInfo node={props.node} live={props.live}/>
+            )}
 
             <div className='application-node-info__manifest'>
                 <Tabs selectedTabKey={tabs[0].key} tabs={tabs} />

@@ -427,3 +427,8 @@ export interface ManifestResponse {
     revision: string;
     params: ComponentParameter[];
 }
+
+export enum PatchTypes {
+    JSONPatchType = 'application/json-patch+json',
+    MergePatchType = 'application/merge-patch+json',
+}

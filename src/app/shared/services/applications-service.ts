@@ -103,6 +103,18 @@ export class ApplicationsService {
             group: resource.group,
         }).then((res) => res.body as { manifest: string }).then((res) => JSON.parse(res.manifest) as models.State);
     }
+    public patchResource(name: string, resource: models.ResourceNode, patchType: models.PatchTypes, patch: string): Promise<models.State> {
+        return requests.post(`/applications/${name}/resource`).send({
+            name,
+            namespace: resource.namespace,
+            resourceName: resource.name,
+            version: resource.version,
+            kind: resource.kind,
+            group: resource.group,
+            patchType,
+            patch,
+        }).then((res) => res.body as { manifest: string }).then((res) => JSON.parse(res.manifest) as models.State);
+    }
 
     public deleteResource(applicationName: string, resource: models.ResourceNode, force: boolean): Promise<any> {
         return requests.delete(`/applications/${applicationName}/resource`).query({
